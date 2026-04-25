@@ -24,5 +24,5 @@ int main() {
 
     cout << count << endl;  // I print the result
 
-    return 0;
+    return 0; // I end the program
 }
