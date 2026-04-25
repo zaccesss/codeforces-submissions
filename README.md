@@ -43,6 +43,32 @@ Commit messages follow the format:
 
 ---
 
+## Local Builds
+
+Compiled executables are kept out of Git and should be built into `bin/`.
+
+To build a C++ solution:
+
+```powershell
+.\scripts\build.ps1 practice/800/4A-watermelon.cpp
+```
+
+To build and run it:
+
+```powershell
+.\scripts\build.ps1 practice/800/4A-watermelon.cpp -Run
+```
+
+The output keeps the same folder structure under `bin/`, for example:
+
+```text
+bin/practice/800/4A-watermelon.exe
+```
+
+VS Code users can also run the default build task with `Ctrl+Shift+B`.
+
+---
+
 ## Languages
 
 | Icon | Language | Extension | Notes |

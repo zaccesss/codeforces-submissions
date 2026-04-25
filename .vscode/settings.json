@@ -1,0 +1,6 @@
+{
+  "code-runner.runInTerminal": true,
+  "code-runner.executorMap": {
+    "cpp": "powershell -ExecutionPolicy Bypass -File \"$workspaceRoot/scripts/build.ps1\" \"$fullFileName\" -Run"
+  }
+}
