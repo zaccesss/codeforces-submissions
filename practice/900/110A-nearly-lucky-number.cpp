@@ -2,7 +2,7 @@
 // https://codeforces.com/problemset/problem/110/A
 // Solution by zac
 //
-// BEGINNER COMMENTS: This code checks if the number of lucky digits (4 or 7)
+//  This code checks if the number of lucky digits (4 or 7)
 // in the input number is itself a lucky number (4 or 7).
 
 #include <iostream>
