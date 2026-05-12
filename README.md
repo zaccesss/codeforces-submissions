@@ -4,7 +4,7 @@
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-isaacadjei.me-000000?style=for-the-badge&logo=googlechrome&logoColor=06ffa5)](https://isaacadjei.me)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Isaac_Adjei-0a66c2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/isaacadjei)
-[![Email](https://img.shields.io/badge/Email-Contact-ff6f61?style=for-the-badge&logo=gmail&logoColor=white)](mailto:contact@zacess.com)
+[![Email](https://img.shields.io/badge/Email-Contact-ff6f61?style=for-the-badge&logo=gmail&logoColor=white)](mailto:code@isaacadjei.me)
 [![Codeforces](https://img.shields.io/badge/Codeforces-zaccesss-1F8ACB?style=for-the-badge&logo=codeforces&logoColor=white)](https://codeforces.com/profile/zaccesss)
 
 ---
@@ -99,7 +99,7 @@ VS Code users can also run the default build task with `Ctrl+Shift+B`.
 
 ---
 
-Made with 💻 by [Isaac Adjei (Zaccess)](https://zacess.com)
+Made with 💻 by [Isaac Adjei](https://isaacadjei.me)
 
 [![isaacadjei.me](https://img.shields.io/badge/isaacadjei.me-000000?style=for-the-badge)](https://isaacadjei.me)
 [![zacess.com](https://img.shields.io/badge/zacess.com-000000?style=for-the-badge)](https://zacess.com)
