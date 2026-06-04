@@ -1,0 +1,25 @@
+name: Mirror
+
+# I mirror every push to main out to GitLab, Codeberg, and Gitea automatically
+# so I don't have to manage push URLs locally.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror to GitLab, Codeberg, Gitea
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          git push "https://zaccesss:${GITLAB_TOKEN}@gitlab.com/zaccesss/${{ github.event.repository.name }}.git" HEAD:main
+          git push "https://zaccesss:${CODEBERG_TOKEN}@codeberg.org/zaccesss/${{ github.event.repository.name }}.git" HEAD:main
+          git push "https://zaccesss:${GITEA_TOKEN}@gitea.com/zaccesss/${{ github.event.repository.name }}.git" HEAD:main
