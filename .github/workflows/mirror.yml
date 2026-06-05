@@ -25,6 +25,6 @@ jobs:
           git push "https://zaccesss:${CODEBERG_TOKEN}@codeberg.org/zaccesss/${{ github.event.repository.name }}.git" HEAD:main
           echo "$GITEA_SSH_KEY" > /tmp/gitea_key
           chmod 600 /tmp/gitea_key
-          ssh-keyscan -H gitea.com >> ~/.ssh/known_hosts 2>/dev/null
+          mkdir -p ~/.ssh && ssh-keyscan -H gitea.com >> ~/.ssh/known_hosts 2>/dev/null
           GIT_SSH_COMMAND="ssh -i /tmp/gitea_key" git push git@gitea.com:zaccesss/${{ github.event.repository.name }}.git HEAD:main
           rm /tmp/gitea_key
