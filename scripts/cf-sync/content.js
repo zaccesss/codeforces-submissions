@@ -2,7 +2,10 @@
 //   codeforces.com/contest/{id}/my      — post-submit redirect, live verdict table
 //   codeforces.com/contest/{id}/submission/{submId} — individual submission view
 
-const pushed = new Set(); // dedupe within a page session
+// In-memory dedupe for this page session. Persistent dedupe lives in
+// chrome.storage.local (background.js). This prevents duplicate messages when
+// both the initial row scan and the MutationObserver fire for the same row.
+const pushed = new Set();
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -17,7 +20,8 @@ const readCode = (root) => {
   return null;
 };
 
-// Fetch a CF page (same-origin, session cookies included automatically)
+// credentials:'include' sends CF session cookies so the fetched page shows
+// the actual source code (CF hides code on submission pages when logged out)
 const fetchCFPage = async (url) => {
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) return null;
@@ -29,7 +33,9 @@ const push = ({ contestId, index, name, lang, submId, code }) => {
   const key = `${contestId}-${index}`;
   if (pushed.has(key)) return;
   pushed.add(key);
-  chrome.runtime.sendMessage({ action: 'push', contestId, index, name, lang, submId, code },
+  chrome.runtime.sendMessage(
+    { action: 'push', contestId, index, name, lang, submId, code },
+    // Remove from Set on failure so a page reload can retry
     (res) => { if (!res?.ok) pushed.delete(key); }
   );
 };
@@ -39,14 +45,12 @@ const push = ({ contestId, index, name, lang, submId, code }) => {
 const contestId = location.pathname.match(/\/contest\/(\d+)/)?.[1];
 
 const processRow = async (row) => {
-  // Only act on accepted rows
   if (!row.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) return;
 
   const submLink = row.querySelector('td:first-child a[href*="/submission/"]');
   const submId   = subIdFromHref(submLink?.href);
   if (!submId) return;
 
-  // Problem cell: link href ends in /problem/INDEX  or  text like "300A"
   const probLink = row.querySelector('td a[href*="/problem/"]');
   const index    = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
   const name     = probLink?.textContent?.trim();
@@ -55,7 +59,8 @@ const processRow = async (row) => {
   const langCell = row.querySelector('.source-code-cell, td:nth-child(5)');
   const lang     = langCell?.textContent?.trim() || 'C++';
 
-  // Fetch the submission page to get the actual code
+  // The /my list view never shows the actual code — only the submission detail
+  // page does. We fetch it here (same-origin, cookies auto-included).
   const doc  = await fetchCFPage(`https://codeforces.com/contest/${contestId}/submission/${submId}`);
   const code = doc && readCode(doc);
   if (!code) return;
@@ -64,10 +69,11 @@ const processRow = async (row) => {
 };
 
 if (contestId && /\/my(\?|$)/.test(location.pathname + location.search)) {
-  // Process any rows already on the page (refresh / revisit)
+  // Handle already-accepted rows visible on page load (refresh / revisit)
   document.querySelectorAll('table tr').forEach(processRow);
 
-  // Watch for verdict cells being updated by CF's live polling
+  // CF updates verdict cells by mutating existing text nodes, not by replacing
+  // DOM elements, so we need characterData:true to catch those in-place changes
   new MutationObserver((mutations) => {
     for (const m of mutations) {
       for (const node of [...m.addedNodes]) {
@@ -75,7 +81,6 @@ if (contestId && /\/my(\?|$)/.test(location.pathname + location.search)) {
         const rows = node.tagName === 'TR' ? [node] : [...node.querySelectorAll('tr')];
         rows.forEach(processRow);
       }
-      // Handle CF updating an existing cell's text in place
       if (m.target?.closest?.('td.verdict-accepted, [class*="verdict-format-accepted"]')) {
         const row = m.target.closest('tr');
         if (row) processRow(row);
@@ -89,12 +94,9 @@ if (contestId && /\/my(\?|$)/.test(location.pathname + location.search)) {
 const submId = location.pathname.match(/\/submission\/(\d+)/)?.[1];
 
 if (contestId && submId && !location.pathname.endsWith('/my')) {
-  // Only act if verdict is Accepted
   if (document.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) {
-    const code = readCode(document);
-    const lang = document.querySelector('.lang, .source-code-cell')?.textContent?.trim() || 'C++';
-
-    // Problem info from breadcrumb or title
+    const code     = readCode(document);
+    const lang     = document.querySelector('.lang, .source-code-cell')?.textContent?.trim() || 'C++';
     const probLink = document.querySelector('a[href*="/problem/"]');
     const index    = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
     const name     = probLink?.textContent?.trim();
