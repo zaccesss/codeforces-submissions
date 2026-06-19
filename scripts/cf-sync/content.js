@@ -100,17 +100,25 @@ if (contestIdFromUrl && isMyPage || isProblemsetStatus) {
     }
   }
 
-  // CF updates verdict cells by mutating existing text nodes, not by replacing
-  // DOM elements, so we need characterData:true to catch those in-place changes
   new MutationObserver((mutations) => {
     for (const m of mutations) {
-      for (const node of [...m.addedNodes]) {
-        if (node.nodeType !== 1) continue;
-        const rows = node.tagName === 'TR' ? [node] : [...node.querySelectorAll('tr')];
-        rows.forEach(processRow);
+      if (m.type === 'childList') {
+        for (const node of [...m.addedNodes]) {
+          if (node.nodeType !== 1) continue;
+          if (node.tagName === 'TR') {
+            processRow(node);
+          } else {
+            // CF updates verdict by injecting a span inside an existing TR —
+            // find the ancestor row and re-evaluate it
+            const rows = [...node.querySelectorAll('tr')];
+            if (rows.length) rows.forEach(processRow);
+            else { const r = node.closest?.('tr'); if (r) processRow(r); }
+          }
+        }
       }
-      if (m.target?.closest?.('td.verdict-accepted, [class*="verdict-format-accepted"]')) {
-        const row = m.target.closest('tr');
+      if (m.type === 'characterData') {
+        // m.target is a Text node — climb to its parent element then find the row
+        const row = m.target.parentElement?.closest?.('tr');
         if (row) processRow(row);
       }
     }
