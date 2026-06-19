@@ -2,31 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CF Sync</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; width: 300px; padding: 18px; background: #fff; color: #111; }
     h2 { font-size: 14px; font-weight: 700; margin-bottom: 14px; letter-spacing: -0.2px; }
     label { display: block; font-size: 11px; font-weight: 600; color: #555; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .label-note { font-weight: 400; text-transform: none; }
     input {
       width: 100%; padding: 7px 9px; border: 1px solid #d1d5db; border-radius: 5px;
       font-size: 13px; outline: none; transition: border-color .15s;
     }
     input:focus { border-color: #1a1a1a; }
-    .row { display: flex; gap: 8px; margin-top: 14px; }
     button {
-      flex: 1; padding: 8px 0; border: none; border-radius: 5px;
+      width: 100%; padding: 8px 0; border: none; border-radius: 5px;
       font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s;
     }
     button:hover { opacity: .85; }
-    #btnSave { background: #1a1a1a; color: #fff; }
-    #btnSync { background: #f3f4f6; color: #1a1a1a; }
+    #btnSave { background: #1a1a1a; color: #fff; margin-top: 14px; }
     #status { margin-top: 10px; font-size: 12px; color: #6b7280; min-height: 16px; }
     #status.ok  { color: #16a34a; }
     #status.err { color: #dc2626; }
     hr { border: none; border-top: 1px solid #f3f4f6; margin: 14px 0 10px; }
     .hint { font-size: 11px; color: #9ca3af; }
-    .hint a { color: #6b7280; }
-    #btnClear { background: none; border: 1px solid #e5e7eb; color: #6b7280; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 6px; cursor: pointer; }
+    #btnClear {
+      background: none; border: 1px solid #e5e7eb; color: #6b7280;
+      font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 6px;
+      width: auto; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -35,22 +39,19 @@
   <label>Codeforces handle</label>
   <input id="cfHandle" placeholder="zaccesss" autocomplete="off" spellcheck="false" />
 
-  <label>GitHub token <span style="font-weight:400;text-transform:none">(needs <code>repo</code> scope)</span></label>
+  <label>GitHub token <span class="label-note">(needs <code>repo</code> scope)</span></label>
   <input id="githubToken" type="password" placeholder="ghp_..." autocomplete="off" spellcheck="false" />
 
   <label>GitHub repo</label>
   <input id="githubRepo" placeholder="zaccesss/codeforces-submissions" autocomplete="off" spellcheck="false" />
 
-  <div class="row">
-    <button id="btnSave">Save</button>
-    <button id="btnSync">Sync now</button>
-  </div>
+  <button type="button" id="btnSave">Save</button>
 
   <p id="status"></p>
 
   <hr>
-  <p class="hint">Solutions sync every minute while Chrome is open. You must be logged in to Codeforces.</p>
-  <button id="btnClear">Reset synced history</button>
+  <p class="hint">Syncs automatically when CF shows Accepted — no polling, no delay. Must be logged in to Codeforces. GitHub token needs <code>repo</code> scope.</p>
+  <button type="button" id="btnClear">Reset synced history</button>
 
   <script src="popup.js"></script>
 </body>
