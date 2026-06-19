@@ -1,11 +1,13 @@
 // Runs on:
-//   codeforces.com/contest/{id}/my      — post-submit redirect, live verdict table
+//   codeforces.com/contest/{id}/my         — post-submit redirect, live verdict table
 //   codeforces.com/contest/{id}/submission/{submId} — individual submission view
+//   codeforces.com/problemset/status*      — problemset submit redirect
 
 // In-memory dedupe for this page session. Persistent dedupe lives in
 // chrome.storage.local (background.js). This prevents duplicate messages when
 // both the initial row scan and the MutationObserver fire for the same row.
 const pushed = new Set();
+console.log('[cf-sync] loaded on', location.href);
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,8 +51,10 @@ const contestIdFromUrl = location.pathname.match(/\/contest\/(\d+)/)?.[1];
 const processRow = async (row) => {
   if (!row.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) return;
 
-  const submLink = row.querySelector('td:first-child a[href*="/submission/"]');
+  // submission link is in the first column on both contest and problemset pages
+  const submLink = row.querySelector('a[href*="/submission/"]');
   const submId   = subIdFromHref(submLink?.href);
+  console.log('[cf-sync] submLink:', submLink?.href, '→ submId:', submId);
   if (!submId) return;
 
   const probLink  = row.querySelector('td a[href*="/problem/"]');
@@ -58,6 +62,7 @@ const processRow = async (row) => {
   const name      = probLink?.textContent?.trim();
   // extract contestId from problem href when not on a contest page
   const contestId = contestIdFromUrl || probLink?.href?.match(/\/(?:contest|problem)\/(\d+)\//)?.[1];
+  console.log('[cf-sync] index:', index, 'name:', name, 'contestId:', contestId);
   if (!index || !name || !contestId) return;
 
   const langCell = row.querySelector('.source-code-cell, td:nth-child(5)');
@@ -76,8 +81,16 @@ const isMyPage = /\/my(\?|$)/.test(location.pathname + location.search);
 const isProblemsetStatus = location.pathname.startsWith('/problemset/status');
 
 if (contestIdFromUrl && isMyPage || isProblemsetStatus) {
-  // Handle already-accepted rows visible on page load (refresh / revisit)
-  document.querySelectorAll('table tr').forEach(processRow);
+  // Only process the first accepted row on load — fetching ALL rows at once
+  // causes CF to return 503 (rate limit). The MutationObserver handles new rows.
+  const rows = [...document.querySelectorAll('table tr')];
+  console.log('[cf-sync] scanning top row of', rows.length, 'total');
+  for (const row of rows) {
+    if (row.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) {
+      processRow(row);
+      break;
+    }
+  }
 
   // CF updates verdict cells by mutating existing text nodes, not by replacing
   // DOM elements, so we need characterData:true to catch those in-place changes
@@ -100,7 +113,7 @@ if (contestIdFromUrl && isMyPage || isProblemsetStatus) {
 
 const submId = location.pathname.match(/\/submission\/(\d+)/)?.[1];
 
-if (contestId && submId && !location.pathname.endsWith('/my')) {
+if (contestIdFromUrl && submId && !location.pathname.endsWith('/my')) {
   if (document.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) {
     const code     = readCode(document);
     const lang     = document.querySelector('.lang, .source-code-cell')?.textContent?.trim() || 'C++';
@@ -108,6 +121,6 @@ if (contestId && submId && !location.pathname.endsWith('/my')) {
     const index    = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
     const name     = probLink?.textContent?.trim();
 
-    if (code && index && name) push({ contestId, index, name, lang, submId, code });
+    if (code && index && name) push({ contestId: contestIdFromUrl, index, name, lang, submId, code });
   }
 }
