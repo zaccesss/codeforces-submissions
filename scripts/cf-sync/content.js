@@ -42,7 +42,9 @@ const push = ({ contestId, index, name, lang, submId, code }) => {
 
 // ── /contest/{id}/my  — submission list ──────────────────────────────────────
 
-const contestId = location.pathname.match(/\/contest\/(\d+)/)?.[1];
+// On contest pages the contestId is in the URL; on /problemset/status we pull
+// it from each row's problem link instead (e.g. /problemset/problem/53/D → 53)
+const contestIdFromUrl = location.pathname.match(/\/contest\/(\d+)/)?.[1];
 
 const processRow = async (row) => {
   if (!row.querySelector('.verdict-accepted, [class*="verdict-format-accepted"]')) return;
@@ -51,16 +53,18 @@ const processRow = async (row) => {
   const submId   = subIdFromHref(submLink?.href);
   if (!submId) return;
 
-  const probLink = row.querySelector('td a[href*="/problem/"]');
-  const index    = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
-  const name     = probLink?.textContent?.trim();
-  if (!index || !name) return;
+  const probLink  = row.querySelector('td a[href*="/problem/"]');
+  const index     = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
+  const name      = probLink?.textContent?.trim();
+  // extract contestId from problem href when not on a contest page
+  const contestId = contestIdFromUrl || probLink?.href?.match(/\/(?:contest|problem)\/(\d+)\//)?.[1];
+  if (!index || !name || !contestId) return;
 
   const langCell = row.querySelector('.source-code-cell, td:nth-child(5)');
   const lang     = langCell?.textContent?.trim() || 'C++';
 
-  // The /my list view never shows the actual code — only the submission detail
-  // page does. We fetch it here (same-origin, cookies auto-included).
+  // The list view never shows the actual code — only the submission detail page
+  // does. We fetch it here (same-origin, cookies auto-included).
   const doc  = await fetchCFPage(`https://codeforces.com/contest/${contestId}/submission/${submId}`);
   const code = doc && readCode(doc);
   if (!code) return;
@@ -68,7 +72,10 @@ const processRow = async (row) => {
   push({ contestId, index, name, lang, submId, code });
 };
 
-if (contestId && /\/my(\?|$)/.test(location.pathname + location.search)) {
+const isMyPage = /\/my(\?|$)/.test(location.pathname + location.search);
+const isProblemsetStatus = location.pathname.startsWith('/problemset/status');
+
+if (contestIdFromUrl && isMyPage || isProblemsetStatus) {
   // Handle already-accepted rows visible on page load (refresh / revisit)
   document.querySelectorAll('table tr').forEach(processRow);
 
