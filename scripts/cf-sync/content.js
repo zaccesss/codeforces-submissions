@@ -11,7 +11,13 @@ console.log('[cf-sync] loaded on', location.href);
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const subIdFromHref = (href) => href?.match(/\/submission\/(\d+)/)?.[1];
+// submId is always the last path segment regardless of URL format:
+//   /contest/{id}/submission/{submId}      (contest pages)
+//   /problemset/submission/{id}/{submId}   (problemset pages)
+const subIdFromHref = (href) => {
+  const last = href?.split('/').pop()?.split('?')[0];
+  return last && /^\d+$/.test(last) ? last : null;
+};
 
 const readCode = (root) => {
   for (const sel of ['pre#program-source-text', 'pre.prettyprint', '.source pre']) {
@@ -58,7 +64,9 @@ const processRow = async (row) => {
   if (!submId) return;
 
   const probLink  = row.querySelector('td a[href*="/problem/"]');
-  const index     = probLink?.href?.match(/\/problem\/([A-Z0-9]+)/i)?.[1];
+  // index is the last path segment in both /contest/{id}/problem/{index}
+  // and /problemset/problem/{id}/{index}
+  const index     = probLink?.href?.split('/').pop()?.split('?')[0] || null;
   const name      = probLink?.textContent?.trim();
   // extract contestId from problem href when not on a contest page
   const contestId = contestIdFromUrl || probLink?.href?.match(/\/(?:contest|problem)\/(\d+)\//)?.[1];
