@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "CF Sync",
+  "version": "1.0.0",
+  "description": "Sync accepted Codeforces solutions to your GitHub repo automatically",
+  "permissions": ["storage", "alarms", "tabs", "scripting"],
+  "host_permissions": [
+    "https://codeforces.com/*",
+    "https://api.github.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CF Sync"
+  }
+}
